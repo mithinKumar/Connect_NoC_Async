@@ -214,6 +214,17 @@ net_simple_dc: copy_vlog
 	$(call vsim_compile, mkNetworkSimple, NetworkSimple.bsv);
 	$(call dc_compile, mkNetworkSimple);
 
+net_cdc: copy_vlog
+	$(call vsim_compile, mkNetworkCDCSynth, NetworkCDC.bsv);
+
+net_simple_cdc: copy_vlog
+	$(call vsim_compile, mkNetworkSimpleCDCSynth, NetworkCDC.bsv);
+
+net_cdc_top: copy_vlog
+	$(call vsim_compile, mkNetworkCDCTop, NetworkCDCTop.bsv);
+
+net_simple_cdc_top: copy_vlog
+	$(call vsim_compile, mkNetworkSimpleCDCTop, NetworkCDCTop.bsv);
 
 mcr_tb: copy_vlog
 	$(call vsim_compile, mkMCRouter_tb, MCRouter_tb.bsv);

@@ -70,6 +70,10 @@ copy_vlog:
 	#cp *.data ./build
 	- cp ./*routing_*.hex ./build
 	- cp ./*.rom ./build
+	- cp $(BLUESPECDIR)/Verilog/*.v ./build
+	- cp $(BLUESPECDIR)/Verilog/SizedFIFO.v ./build
+	- cp $(BLUESPECDIR)/Verilog/SyncFIFO.v ./build
+	- cp $(BLUESPECDIR)/Verilog/SyncRegister.v ./build
 	#cp ./net_configs/*.data ./build
 
 copy_init_files:
