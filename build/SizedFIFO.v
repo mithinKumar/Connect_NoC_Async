@@ -1,47 +1,44 @@
 
+// Copyright (c) 2000-2009 Bluespec, Inc.
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+// $Revision: 24080 $
+// $Date: 2011-05-18 19:32:52 +0000 (Wed, 18 May 2011) $
+
 `ifdef BSV_ASSIGNMENT_DELAY
 `else
-  `define BSV_ASSIGNMENT_DELAY
-`endif
-
-`ifdef BSV_POSITIVE_RESET
-  `define BSV_RESET_VALUE 1'b1
-  `define BSV_RESET_EDGE posedge
-`else
-  `define BSV_RESET_VALUE 1'b0
-  `define BSV_RESET_EDGE negedge
-`endif
-
-`ifdef BSV_ASYNC_RESET
- `define BSV_ARESET_EDGE_META or `BSV_RESET_EDGE RST
-`else
- `define BSV_ARESET_EDGE_META
-`endif
-
-`ifdef BSV_RESET_FIFO_HEAD
- `define BSV_ARESET_EDGE_HEAD `BSV_ARESET_EDGE_META
-`else
- `define BSV_ARESET_EDGE_HEAD
-`endif
-
-`ifdef BSV_RESET_FIFO_ARRAY
- `define BSV_ARESET_EDGE_ARRAY `BSV_ARESET_EDGE_META
-`else
- `define BSV_ARESET_EDGE_ARRAY
+`define BSV_ASSIGNMENT_DELAY
 `endif
 
 
 // Sized fifo.  Model has output register which improves timing
-module SizedFIFO(CLK, RST, D_IN, ENQ, FULL_N, D_OUT, DEQ, EMPTY_N, CLR);
+module SizedFIFO(CLK, RST_N, D_IN, ENQ, FULL_N, D_OUT, DEQ, EMPTY_N, CLR);
    parameter               p1width = 1; // data width
    parameter               p2depth = 3;
    parameter               p3cntr_width = 1; // log(p2depth-1)
    // The -1 is allowed since this model has a fast output register
-   parameter               guarded = 1'b1;
-   localparam              p2depth2 = (p2depth >= 2) ? (p2depth -2) : 0 ;
+   parameter               guarded = 1;
+   localparam              p2depth2 = p2depth -2 ;
 
    input                   CLK;
-   input                   RST;
+   input                   RST_N;
    input                   CLR;
    input [p1width - 1 : 0] D_IN;
    input                   ENQ;
@@ -62,7 +59,7 @@ module SizedFIFO(CLK, RST, D_IN, ENQ, FULL_N, D_OUT, DEQ, EMPTY_N, CLR);
 
    // if the depth is too small, don't create an ill-sized array;
    // instead, make a 1-sized array and let the initial block report an error
-   reg [p1width - 1 : 0]     arr[0: p2depth2];
+   reg [p1width - 1 : 0]     arr[0: ((p2depth >= 2) ? (p2depth2) : 0)];
 
    reg [p1width - 1 : 0]     D_OUT;
    reg                       hasodata;
@@ -95,7 +92,7 @@ module SizedFIFO(CLK, RST, D_IN, ENQ, FULL_N, D_OUT, DEQ, EMPTY_N, CLR);
         head          = {p3cntr_width {1'b0}} ;
         tail          = {p3cntr_width {1'b0}} ;
 
-        for (i = 0; i <= p2depth2; i = i + 1)
+        for (i = 0; i <= p2depth2 && p2depth > 2; i = i + 1)
           begin
              arr[i]   = D_OUT ;
           end
@@ -103,109 +100,98 @@ module SizedFIFO(CLK, RST, D_IN, ENQ, FULL_N, D_OUT, DEQ, EMPTY_N, CLR);
    // synopsys translate_on
 `endif // BSV_NO_INITIAL_BLOCKS
 
-
-   always @(posedge CLK `BSV_ARESET_EDGE_META)
+   always @(posedge CLK /* or negedge RST_N */ )
      begin
-        if (RST == `BSV_RESET_VALUE)
+        if (!RST_N)
           begin
              head <= `BSV_ASSIGNMENT_DELAY {p3cntr_width {1'b0}} ;
              tail <= `BSV_ASSIGNMENT_DELAY {p3cntr_width {1'b0}} ;
              ring_empty <= `BSV_ASSIGNMENT_DELAY 1'b1;
              not_ring_full <= `BSV_ASSIGNMENT_DELAY 1'b1;
              hasodata <= `BSV_ASSIGNMENT_DELAY 1'b0;
-          end // if (RST == `BSV_RESET_VALUE)
-        else
-         begin
 
-             casez ({CLR, DEQ, ENQ, hasodata, ring_empty})
-               // Clear operation
-               5'b1????: begin
-                  head          <= `BSV_ASSIGNMENT_DELAY {p3cntr_width {1'b0}} ;
-                  tail          <= `BSV_ASSIGNMENT_DELAY {p3cntr_width {1'b0}} ;
-                  ring_empty    <= `BSV_ASSIGNMENT_DELAY 1'b1;
-                  not_ring_full <= `BSV_ASSIGNMENT_DELAY 1'b1;
-                  hasodata      <= `BSV_ASSIGNMENT_DELAY 1'b0;
-               end
-               // -----------------------
-               // DEQ && ENQ case -- change head and tail if added to ring
-               5'b011?0: begin
-                  tail          <= `BSV_ASSIGNMENT_DELAY next_tail;
-                  head          <= `BSV_ASSIGNMENT_DELAY next_head;
-               end
-               // -----------------------
-               // DEQ only and NO data is in ring
-               5'b010?1: begin
-                  hasodata <= `BSV_ASSIGNMENT_DELAY 1'b0;
-               end
-               // DEQ only and data is in ring (move the head pointer)
-               5'b010?0: begin
-                  head          <= `BSV_ASSIGNMENT_DELAY next_head;
-                  not_ring_full <= `BSV_ASSIGNMENT_DELAY 1'b1;
-                  ring_empty    <= `BSV_ASSIGNMENT_DELAY next_head == tail ;
-               end
-               // -----------------------
-               // ENQ only when empty
-               5'b0010?: begin
-                  hasodata      <= `BSV_ASSIGNMENT_DELAY 1'b1;
-                  end
-               // ENQ only when not empty
-               5'b0011?: begin
-                  if ( not_ring_full ) // Drop this test to save redundant test
-                    // but be warnned that with test fifo overflow causes loss of new data
-                    // while without test fifo drops all but head entry! (pointer overflow)
-                   begin
-                      tail          <= `BSV_ASSIGNMENT_DELAY next_tail;
-                      ring_empty    <= `BSV_ASSIGNMENT_DELAY 1'b0;
-                      not_ring_full <= `BSV_ASSIGNMENT_DELAY ! (next_tail == head) ;
-                   end
-               end
-             endcase
-         end // else: !if(RST == `BSV_RESET_VALUE)
-     end // always @ (posedge CLK)
-
-   // Update the fast data out register
-   always @(posedge CLK `BSV_ARESET_EDGE_HEAD)
-     begin
-`ifdef  BSV_RESET_FIFO_HEAD
-        if (RST == `BSV_RESET_VALUE)
-          begin
+             // Following section initializes the data registers which
+             // may be desired only in some situations.
+             // Uncomment to initialize array
+             /*
              D_OUT    <= `BSV_ASSIGNMENT_DELAY {p1width {1'b0}} ;
-          end // if (RST == `BSV_RESET_VALUE)
-        else
-`endif
-        begin
-             casez ({CLR, DEQ, ENQ, hasodata, ring_empty})
-               // DEQ && ENQ cases
-               5'b011?0: begin D_OUT <= `BSV_ASSIGNMENT_DELAY arr[head]; end
-               5'b011?1: begin D_OUT <= `BSV_ASSIGNMENT_DELAY D_IN; end
-               // DEQ only and data is in ring
-               5'b010?0: begin D_OUT <= `BSV_ASSIGNMENT_DELAY arr[head]; end
-               // ENQ only when empty
-               5'b0010?: begin D_OUT <= `BSV_ASSIGNMENT_DELAY D_IN; end
-             endcase
-          end // else: !if(RST == `BSV_RESET_VALUE)
-     end // always @ (posedge CLK)
-
-   // Update the memory array  reset is OFF
-   always @(posedge CLK `BSV_ARESET_EDGE_ARRAY)
-     begin: array
-`ifdef BSV_RESET_FIFO_ARRAY
-        if (RST == `BSV_RESET_VALUE)
-          begin: rst_array
-             integer i;
              for (i = 0; i <= p2depth2 && p2depth > 2; i = i + 1)
                begin
                    arr[i]  <= `BSV_ASSIGNMENT_DELAY {p1width {1'b0}} ;
                end
-          end // if (RST == `BSV_RESET_VALUE)
+              */
+          end // if (RST_N == 0)
         else
-`endif
          begin
+
+	    // Update arr[tail] once, since some FPGA synthesis tools are unable
+            // to infer good RAM placement when there are multiple separate
+	    // writes of arr[tail] <= D_IN
             if (!CLR && ENQ && ((DEQ && !ring_empty) || (!DEQ && hasodata && not_ring_full)))
               begin
                  arr[tail] <= `BSV_ASSIGNMENT_DELAY D_IN;
               end
-         end // else: !if(RST == `BSV_RESET_VALUE)
+
+            if (CLR)
+              begin
+                 head <= `BSV_ASSIGNMENT_DELAY {p3cntr_width {1'b0}} ;
+                 tail <= `BSV_ASSIGNMENT_DELAY {p3cntr_width {1'b0}} ;
+                 ring_empty <= `BSV_ASSIGNMENT_DELAY 1'b1;
+                 not_ring_full <= `BSV_ASSIGNMENT_DELAY 1'b1;
+                 hasodata <= `BSV_ASSIGNMENT_DELAY 1'b0;
+              end // if (CLR)
+
+            else if (DEQ && ENQ )
+              begin
+                 if (ring_empty)
+                   begin
+                      D_OUT <= `BSV_ASSIGNMENT_DELAY D_IN;
+                   end
+                 else
+                   begin
+                      // moved into combined write above
+		      // arr[tail] <= `BSV_ASSIGNMENT_DELAY D_IN;
+                      tail <= `BSV_ASSIGNMENT_DELAY next_tail;
+                      D_OUT <= `BSV_ASSIGNMENT_DELAY arr[head];
+                      head <= `BSV_ASSIGNMENT_DELAY next_head;
+                   end
+              end // if (DEQ && ENQ )
+
+            else if ( DEQ )
+              begin
+                 if (ring_empty)
+                   begin
+                      hasodata <= `BSV_ASSIGNMENT_DELAY 1'b0;
+                   end
+                 else
+                   begin
+                      D_OUT <= `BSV_ASSIGNMENT_DELAY arr[head];
+                      head <= `BSV_ASSIGNMENT_DELAY next_head;
+                      not_ring_full <= `BSV_ASSIGNMENT_DELAY 1'b1;
+                      ring_empty <= `BSV_ASSIGNMENT_DELAY next_head == tail ;
+                   end
+              end // if ( DEQ )
+
+            else if (ENQ)
+              begin
+                 if (! hasodata)
+                   begin
+                      D_OUT <= `BSV_ASSIGNMENT_DELAY D_IN;
+                      hasodata <= `BSV_ASSIGNMENT_DELAY 1'b1;
+                   end
+                 else if ( not_ring_full ) // Drop this test to save redundant test
+                   // but be warnned that with test fifo overflow causes loss of new data
+                   // while without test fifo drops all but head entry! (pointer overflow)
+                   begin
+                      // moved into combined write above
+                      // arr[tail] <= `BSV_ASSIGNMENT_DELAY D_IN; // drop the old element
+                      tail <= `BSV_ASSIGNMENT_DELAY next_tail;
+                      ring_empty <= `BSV_ASSIGNMENT_DELAY 1'b0;
+                      not_ring_full <= `BSV_ASSIGNMENT_DELAY ! (next_tail == head) ;
+                   end
+              end // if (ENQ)
+         end // else: !if(RST_N == 0)
+
      end // always @ (posedge CLK)
 
    // synopsys translate_off
@@ -215,7 +201,7 @@ module SizedFIFO(CLK, RST, D_IN, ENQ, FULL_N, D_OUT, DEQ, EMPTY_N, CLR);
 
         deqerror =  0;
         enqerror = 0;
-        if (RST == ! `BSV_RESET_VALUE)
+        if ( RST_N )
            begin
               if ( ! EMPTY_N && DEQ )
                 begin
@@ -238,16 +224,16 @@ module SizedFIFO(CLK, RST, D_IN, ENQ, FULL_N, D_OUT, DEQ, EMPTY_N, CLR);
         integer ok ;
         ok = 1 ;
 
-        if ( p2depth <= 1)
+        if ( p2depth <= 2 )
           begin
              ok = 0;
-             $display ( "Warning SizedFIFO: %m -- depth parameter increased from %0d to 2", p2depth);
+             $display ( "ERROR SizedFIFO.v: depth parameter must be greater than 2" ) ;
           end
 
         if ( p3cntr_width <= 0 )
           begin
              ok = 0;
-             $display ( "ERROR SizedFIFO: %m -- width parameter must be greater than 0" ) ;
+             $display ( "ERROR SizedFIFO.v: width parameter must be greater than 0" ) ;
           end
 
         if ( ok == 0 ) $finish ;

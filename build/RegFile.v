@@ -1,9 +1,28 @@
 
-`ifdef  BSV_WARN_REGFILE_ADDR_RANGE
-`else
-`define BSV_WARN_REGFILE_ADDR_RANGE 0 
-`endif
+// Copyright (c) 2000-2009 Bluespec, Inc.
 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+// $Revision: 17872 $
+// $Date: 2009-09-18 14:32:56 +0000 (Fri, 18 Sep 2009) $
+
+`define BSV_WARN_REGFILE_ADDR_RANGE 1
 
 `ifdef BSV_ASSIGNMENT_DELAY
 `else
@@ -20,34 +39,35 @@ module RegFile(CLK,
                ADDR_4, D_OUT_4,
                ADDR_5, D_OUT_5
                );
+   // synopsys template   
    parameter                   addr_width = 1;
    parameter                   data_width = 1;
    parameter                   lo = 0;
    parameter                   hi = 1;
-
+   
    input                       CLK;
    input [addr_width - 1 : 0]  ADDR_IN;
    input [data_width - 1 : 0]  D_IN;
    input                       WE;
-
+   
    input [addr_width - 1 : 0]  ADDR_1;
    output [data_width - 1 : 0] D_OUT_1;
-
+   
    input [addr_width - 1 : 0]  ADDR_2;
    output [data_width - 1 : 0] D_OUT_2;
-
+   
    input [addr_width - 1 : 0]  ADDR_3;
    output [data_width - 1 : 0] D_OUT_3;
-
+   
    input [addr_width - 1 : 0]  ADDR_4;
    output [data_width - 1 : 0] D_OUT_4;
-
+   
    input [addr_width - 1 : 0]  ADDR_5;
    output [data_width - 1 : 0] D_OUT_5;
-
+   
    reg [data_width - 1 : 0]    arr[lo:hi];
-
-
+   
+   
 `ifdef BSV_NO_INITIAL_BLOCKS
 `else // not BSV_NO_INITIAL_BLOCKS
    // synopsys translate_off
@@ -56,8 +76,8 @@ module RegFile(CLK,
         integer                     i; 		// temporary for generate reset value
         for (i = lo; i <= hi; i = i + 1) begin
            arr[i] = {((data_width + 1)/2){2'b10}} ;
-        end
-     end // initial begin
+        end 
+     end // initial begin   
    // synopsys translate_on
 `endif // BSV_NO_INITIAL_BLOCKS
 
@@ -98,3 +118,4 @@ module RegFile(CLK,
    // synopsys translate_on
 
 endmodule
+
