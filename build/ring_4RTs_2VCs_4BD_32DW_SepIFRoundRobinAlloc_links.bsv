@@ -1,0 +1,16 @@
+send_ports_ifaces[0] = routers[0].in_ports[0];
+recv_ports_ifaces[0] = routers[0].out_ports[0];
+recv_ports_info_ifaces[0] =  get_port_info_ifc(0);
+send_ports_ifaces[1] = routers[1].in_ports[0];
+recv_ports_ifaces[1] = routers[1].out_ports[0];
+recv_ports_info_ifaces[1] =  get_port_info_ifc(1);
+send_ports_ifaces[2] = routers[2].in_ports[0];
+recv_ports_ifaces[2] = routers[2].out_ports[0];
+recv_ports_info_ifaces[2] =  get_port_info_ifc(2);
+send_ports_ifaces[3] = routers[3].in_ports[0];
+recv_ports_ifaces[3] = routers[3].out_ports[0];
+recv_ports_info_ifaces[3] =  get_port_info_ifc(3);
+links[0] <- mkConnectPorts(routers[0], 1, routers[1], 1);
+links[1] <- mkConnectPorts(routers[1], 1, routers[2], 1);
+links[2] <- mkConnectPorts(routers[2], 1, routers[3], 1);
+links[3] <- mkConnectPorts(routers[3], 1, routers[0], 1);
