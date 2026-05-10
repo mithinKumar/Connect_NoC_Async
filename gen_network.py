@@ -2848,17 +2848,17 @@ def parse_custom_topology(custom_topology_file, send_ports, recv_ports, router_l
 
     for i, l in enumerate(c_topology):
         # only whitespace until end of likne, i.e. empty line
-        m = re.match('\s*$', l)
+        m = re.match(r'\s*$', l)
         if (m is not None):  # whitespace
             # skip whitespace
             continue
-        m = re.match('\s*#', l)  # comment
+        m = re.match(r'\s*#', l)  # comment
         if (m is not None):  # comment
             # print 'Skipping comment on line', i
             continue
         # m = re.match('SendPort\s+(\d+)\s*->\s*R(\d+)\s*:\s*(\d+)', l)
         m = re.match(
-            '\s*SendPort\s+(?P<send_port>\d+)\s*->\s*R(?P<rt>\d+)\s*:\s*(?P<port>\d+)', l)
+            r'\s*SendPort\s+(?P<send_port>\d+)\s*->\s*R(?P<rt>\d+)\s*:\s*(?P<port>\d+)', l)
         if (m is not None):
             send_port = m.group('send_port')
             rt = m.group('rt')
@@ -2884,7 +2884,7 @@ def parse_custom_topology(custom_topology_file, send_ports, recv_ports, router_l
             continue
         # m = re.match('\s*RecvPort\s+(\d+)\s*->\s*R(\d+)\s*:\s*(\d+)', l)
         m = re.match(
-            '\s*RecvPort\s+(?P<recv_port>\d+)\s*->\s*R(?P<rt>\d+)\s*:\s*(?P<port>\d+)', l)
+            r'\s*RecvPort\s+(?P<recv_port>\d+)\s*->\s*R(?P<rt>\d+)\s*:\s*(?P<port>\d+)', l)
         if (m is not None):
             recv_port = m.group('recv_port')
             rt = m.group('rt')
@@ -2908,7 +2908,7 @@ def parse_custom_topology(custom_topology_file, send_ports, recv_ports, router_l
                     recv_port)+1  # update max number of send ports
             continue
         m = re.match(
-            '\s*SendRecvPort\s+(?P<user_port>\d+)\s*->\s*R(?P<rt>\d+)\s*:\s*(?P<port>\d+)', l)
+            r'\s*SendRecvPort\s+(?P<user_port>\d+)\s*->\s*R(?P<rt>\d+)\s*:\s*(?P<port>\d+)', l)
         if (m is not None):
             user_port = m.group('user_port')
             rt = m.group('rt')
@@ -2940,7 +2940,7 @@ def parse_custom_topology(custom_topology_file, send_ports, recv_ports, router_l
                     user_port)+1  # update max number of send ports
             continue
         m = re.match(
-            '\s*RouterLink\s+R(?P<src_rt>\d+)\s*:\s*(?P<src_port>\d+)\s*->\s*R(?P<dst_rt>\d+)\s*:\s*(?P<dst_port>\d+)', l)
+            r'\s*RouterLink\s+R(?P<src_rt>\d+)\s*:\s*(?P<src_port>\d+)\s*->\s*R(?P<dst_rt>\d+)\s*:\s*(?P<dst_port>\d+)', l)
         if (m is not None):
             src_rt = m.group('src_rt')
             src_port = m.group('src_port')
@@ -3046,17 +3046,17 @@ def parse_custom_routing(custom_routing_file, topology_info):
 
     for i, l in enumerate(c_routing):
         # only whitespace until end of likne, i.e. empty line
-        m = re.match('\s*$', l)
+        m = re.match(r'\s*$', l)
         if (m is not None):  # whitespace
             # skip whitespace
             continue
-        m = re.match('\s*#', l)  # comment
+        m = re.match(r'\s*#', l)  # comment
         if (m is not None):  # comment
             # print 'Skipping comment on line', i
             continue
         # m = re.match('SendPort\s+(\d+)\s*->\s*R(\d+)\s*:\s*(\d+)', l)
         m = re.match(
-            '\s*R(?P<rt>\d+)\s*:\s*(?P<dst>\d+)\s*->\s*(?P<port>\d+)', l)
+            r'\s*R(?P<rt>\d+)\s*:\s*(?P<dst>\d+)\s*->\s*(?P<port>\d+)', l)
         if (m is not None):
             rt = m.group('rt')
             dst = m.group('dst')

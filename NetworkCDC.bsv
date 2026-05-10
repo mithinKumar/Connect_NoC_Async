@@ -222,31 +222,4 @@ module mkNetworkSimpleCDCWrapper#(
 
 endmodule
 
-//===========================================================
-// Dummy Wrappers for Synthesis / Compilation Checking
-//===========================================================
-(* synthesize *)
-module mkNetworkCDCSynth(Network);
-    Clock clk <- exposeCurrentClock;
-    Reset rst <- exposeCurrentReset;
-    Vector#(NumUserSendPorts, Clock) send_clks = replicate(clk);
-    Vector#(NumUserSendPorts, Reset) send_rsts = replicate(rst);
-    Vector#(NumUserRecvPorts, Clock) recv_clks = replicate(clk);
-    Vector#(NumUserRecvPorts, Reset) recv_rsts = replicate(rst);
-    
-    let _noc <- mkNetworkCDCWrapper(4, send_clks, send_rsts, recv_clks, recv_rsts);
-    return _noc;
-endmodule
 
-(* synthesize *)
-module mkNetworkSimpleCDCSynth(NetworkSimple);
-    Clock clk <- exposeCurrentClock;
-    Reset rst <- exposeCurrentReset;
-    Vector#(NumUserSendPorts, Clock) send_clks = replicate(clk);
-    Vector#(NumUserSendPorts, Reset) send_rsts = replicate(rst);
-    Vector#(NumUserRecvPorts, Clock) recv_clks = replicate(clk);
-    Vector#(NumUserRecvPorts, Reset) recv_rsts = replicate(rst);
-    
-    let _noc <- mkNetworkSimpleCDCWrapper(4, send_clks, send_rsts, recv_clks, recv_rsts);
-    return _noc;
-endmodule

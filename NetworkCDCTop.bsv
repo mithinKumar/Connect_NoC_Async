@@ -6,7 +6,7 @@ import NetworkCDC::*;
 import NetworkTypes::*;
 
 (* synthesize *)
-module mkNetworkCDCTop(
+module mkNetworkSimpleCDCTop(
     Clock pe_send_clk_0, Reset pe_send_rst_0,
     Clock pe_send_clk_1, Reset pe_send_rst_1,
     Clock pe_send_clk_2, Reset pe_send_rst_2,
@@ -15,7 +15,7 @@ module mkNetworkCDCTop(
     Clock pe_recv_clk_1, Reset pe_recv_rst_1,
     Clock pe_recv_clk_2, Reset pe_recv_rst_2,
     Clock pe_recv_clk_3, Reset pe_recv_rst_3,
-    Network ifc);
+    NetworkSimple ifc);
 
     Vector#(NumUserSendPorts, Clock) send_clks = newVector();
     Vector#(NumUserSendPorts, Reset) send_rsts = newVector();
@@ -37,6 +37,6 @@ module mkNetworkCDCTop(
     recv_rsts[2] = pe_recv_rst_2;
     recv_clks[3] = pe_recv_clk_3;
     recv_rsts[3] = pe_recv_rst_3;
-    let _noc <- mkNetworkCDCWrapper(4, send_clks, send_rsts, recv_clks, recv_rsts);
+    let _noc <- mkNetworkSimpleCDCWrapper(4, send_clks, send_rsts, recv_clks, recv_rsts);
     return _noc;
 endmodule
